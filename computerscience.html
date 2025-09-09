@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Department of Computer Science</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="computerscience.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <!-- HEADER / NAV -->
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="logo" aria-hidden="true">💻 COMPUTER SCIENCE</div>
+
+      <!-- Menu (hidden by default on mobile; toggled by JS) -->
+      <ul class="nav-links" id="navLinks" aria-hidden="true">
+        <li><a href="#history">History</a></li>
+        <li><a href="computerassignments.html">Assignments</a></li>
+        <li><a href="computerabout.html">About</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+
+      <!-- Toggle button -->
+      <button class="toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" onclick="toggleMenu()">☰</button>
+    </nav>
+  </header>
+
+  <!-- HERO: typing line + fixed history paragraph -->
+  <main>
+    <section class="hero" id="history">
+      <div class="overlay" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <!-- typing target (JS writes here) -->
+        <h1 id="typing" aria-live="polite"></h1>
+
+        <!-- permanent history paragraph (visible immediately) -->
+        <p class="history-text">
+          Computer Science has its roots in the 19th century with <strong>Charles Babbage</strong>, 
+          who is often regarded as the father of the computer. Later pioneers like <strong>Ada Lovelace</strong> 
+          helped define early programming concepts. Over time, languages such as Fortran, C, and Python 
+          expanded how we instruct machines. Today, computer science powers <strong>AI, Machine Learning, 
+          Data Science</strong>, and modern web technologies — shaping global innovation.
+        </p>
+      </div>
+    </section>
+
+    <!-- FOCUS: elements animate in as you scroll -->
+    <section class="focus fade-in">
+      <h2>🔎 What We Focus On</h2>
+
+      <div class="focus-grid">
+        <div class="focus-item slide-left">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python logo">
+          <b>Python</b>
+        </div>
+
+        <div class="focus-item slide-right">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML logo">
+          <b>HTML</b>
+        </div>
+
+        <div class="focus-item slide-left">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS logo">
+          <b>CSS</b>
+        </div>
+
+        <div class="focus-item slide-right">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript logo">
+          <b>JavaScript</b>
+        </div>
+
+        <div class="focus-item fade-in">
+          <i class="fas fa-robot" aria-hidden="true" style="font-size:40px;"></i>
+          <b>Artificial Intelligence</b>
+        </div>
+
+        <div class="focus-item slide-left">
+          <i class="fas fa-brain" aria-hidden="true" style="font-size:40px;"></i>
+          <b>Machine Learning</b>
+        </div>
+
+        <div class="focus-item slide-right">
+          <i class="fas fa-database" aria-hidden="true" style="font-size:40px;"></i>
+          <b>Data Science</b>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS: smaller cards that animate in -->
+    <section class="projects fade-in" id="projects" aria-labelledby="projects-heading">
+      <h2 id="projects-heading">🚀 Our Projects</h2>
+
+      <div class="project-grid">
+        <div class="project-card slide-left">
+          <img src="https://via.placeholder.com/320x180?text=1" alt="Project 1 screenshot">
+          <h3>Project One</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-right">
+          <img src="https://via.placeholder.com/320x180?text=2" alt="Project 2 screenshot">
+          <h3>Project Two</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-left">
+          <img src="https://via.placeholder.com/320x180?text=3" alt="Project 3 screenshot">
+          <h3>Project Three</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-right">
+          <img src="https://via.placeholder.com/320x180?text=4" alt="Project 4 screenshot">
+          <h3>Project Four</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card fade-in">
+          <img src="https://via.placeholder.com/320x180?text=5" alt="Project 5 screenshot">
+          <h3>Project Five</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-left">
+          <img src="https://via.placeholder.com/320x180?text=6" alt="Project 6 screenshot">
+          <h3>Project Six</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-right">
+          <img src="https://via.placeholder.com/320x180?text=7" alt="Project 7 screenshot">
+          <h3>Project Seven</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card fade-in">
+          <img src="https://via.placeholder.com/320x180?text=8" alt="Project 8 screenshot">
+          <h3>Project Eight</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-left">
+          <img src="https://via.placeholder.com/320x180?text=9" alt="Project 9 screenshot">
+          <h3>Project Nine</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+
+        <div class="project-card slide-right">
+          <img src="https://via.placeholder.com/320x180?text=10" alt="Project 10 screenshot">
+          <h3>Project Ten</h3>
+          <a href="#" class="btn">View</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact fade-in" id="contact">
+      <h2>📩 Contact Us</h2>
+      <div class="socials">
+        <a href="https://www.tiktok.com/@cscuniuyo" class="slide-left" title="TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
+        <a href="mailto:youremail@domain.com" class="fade-in" title="Email"><i class="fas fa-envelope" aria-hidden="true"></i></a>
+        <a href="#" class="slide-right" title="GitHub"><i class="fab fa-github" aria-hidden="true"></i></a>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© The University Of Uyo Department Of Computer Science</p>
+  </footer>
+
+  <!-- JS (typing + toggle + scroll observer) -->
+  <script src="computerscience.js"></script>
+</body>
+</html>
