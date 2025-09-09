@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 
-/* Full Page Background */
+/* Full Page Background with Blur Overlay */
 html, body {
   height: 100%;
   min-height: 100vh;
@@ -13,19 +13,19 @@ html, body {
   color: #fff;
   display: flex;
   flex-direction: column;
+  position: relative;
   background: url("https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1600") 
               no-repeat center center fixed;
   background-size: cover;
-  position: relative;
 }
 
-/* Dark overlay for readability */
+/* Blur Overlay */
 body::before {
   content: "";
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(5px);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6); /* dark overlay */
+  backdrop-filter: blur(6px); /* blur effect */
   z-index: -1;
 }
 
@@ -82,7 +82,7 @@ body::before {
 
 /* Book Cards */
 .book-card {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.1);
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.5);
@@ -133,5 +133,5 @@ footer {
   text-align: center;
   padding: 1rem;
   background: rgba(0,0,0,0.7);
-  margin-top: auto; /* keeps footer down */
+  margin-top: auto;
 }
