@@ -1,0 +1,142 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+ /* Full Page Background */
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: url("https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1600")
+              no-repeat center center fixed;
+  background-size: cover;
+  overflow-x: hidden;
+}
+
+/* Blur Overlay for entire page */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55); /* dark overlay */
+  backdrop-filter: blur(20px);      /* blur stronger */
+  -webkit-backdrop-filter: blur(10px); /* Safari fix */
+  z-index: -1;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.65);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+/* Library */
+.library {
+  flex: 1;
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.library h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+}
+
+.bookshelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Book Cards */
+.book-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+}
+
+.book-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.book-card h2 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.4rem;
+}
+
+.book-card p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+/* Button */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background: #ff9800;
+  color: #000;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.btn:hover {
+  background: #ffc107;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.7);
+  margin-top: auto;
+}
