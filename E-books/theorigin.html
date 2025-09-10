@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>History of Computer Science</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="books.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* Extra spacing for history page */
+    .history-era {
+      max-width: 900px;
+      margin: 80px auto; /* spacing between sections */
+      padding: 40px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      line-height: 1.8;
+    }
+
+    .history-era h2 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #00e0ff;
+      border-left: 5px solid #00e0ff;
+      padding-left: 12px;
+    }
+
+    .history-era p {
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+      color: #f1f1f1;
+    }
+
+    /* Adjust footer spacing */
+    footer {
+      margin-top: 100px;
+    }
+
+    /* Menu toggle for history page */
+    .toggle {
+      font-size: 1.8rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">📜 HISTORY OF COMPUTER SCIENCE</div>
+
+      <!-- Menu list -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+      </ul>
+
+      <!-- Toggle button -->
+      <button class="toggle" id="menuToggle" aria-label="Toggle menu" onclick="toggleMenu()">☰</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ERA 1 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-left">The Dawn of Calculation</h2>
+      <p>
+        Long before computers, humans sought ways to count and calculate. 
+        The <strong>abacus</strong>, used in Mesopotamia, Egypt, China, and Rome, 
+        is one of the earliest tools for arithmetic. It represented the idea that 
+        numbers could be moved, stored, and manipulated physically. 
+      </p>
+      <p>
+        By the 17th century, inventors like <strong>Blaise Pascal</strong> and 
+        <strong>Gottfried Leibniz</strong> created mechanical calculators. 
+        Pascal’s “Pascaline” (1642) could add and subtract, while Leibniz’s 
+        “Stepped Reckoner” handled multiplication and division. 
+        These were humanity’s first attempts to embody logic in machines.
+      </p>
+    </section>
+
+    <!-- ERA 2 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-right">The Age of Analytical Machines</h2>
+      <p>
+        In the 19th century, <strong>Charles Babbage</strong> envisioned 
+        the <em>Difference Engine</em> and the more ambitious 
+        <em>Analytical Engine</em>, designs that looked like modern computers 
+        with memory, processing, and output. Though never built in his lifetime, 
+        his ideas were groundbreaking.
+      </p>
+      <p>
+        <strong>Ada Lovelace</strong>, often called the first programmer, 
+        wrote algorithms for Babbage’s Analytical Engine and imagined that 
+        computers could go beyond numbers into art, music, and logic. 
+        Her foresight marks the true beginning of programming.
+      </p>
+    </section>
+
+    <!-- ERA 3 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-left">Electromechanical Computers</h2>
+      <p>
+        The early 20th century saw punch card systems, pioneered by 
+        <strong>Herman Hollerith</strong> for the 1890 U.S. census. 
+        These devices later formed the foundation of IBM. 
+      </p>
+      <p>
+        By the 1930s and 1940s, inventors like <strong>Konrad Zuse</strong> 
+        built the first programmable digital computers, such as the Z3. 
+        These machines used electromechanical relays and set the stage 
+        for the fully electronic age.
+      </p>
+    </section>
+
+    <!-- ERA 4 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-right">World War II and the Birth of Modern Computing</h2>
+      <p>
+        During World War II, computers became weapons of intelligence. 
+        The British <strong>Colossus</strong> machine helped crack Nazi codes, 
+        while in the U.S., the <strong>ENIAC</strong> tackled massive calculations. 
+      </p>
+      <p>
+        <strong>Alan Turing</strong>, one of the greatest minds in computer 
+        science, not only contributed to codebreaking but also articulated 
+        the theoretical foundations of algorithms and artificial intelligence. 
+      </p>
+      <p>
+        <strong>John von Neumann</strong> later formalized the stored-program 
+        architecture, which remains the basis of modern computers today.
+      </p>
+    </section>
+
+    <!-- ERA 5 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-left">The Programming Revolution</h2>
+      <p>
+        The 1950s ushered in the age of programming languages. 
+        <strong>FORTRAN</strong> (1957) for scientific computing, 
+        <strong>COBOL</strong> (1959) for business, and 
+        <strong>LISP</strong> (1958) for artificial intelligence 
+        opened computers to broader applications. 
+      </p>
+      <p>
+        This was also the birth of computer science as an academic discipline. 
+        Universities formed departments dedicated to studying algorithms, 
+        theory, and hardware. 
+      </p>
+      <p>
+        Meanwhile, <strong>Gordon Moore</strong> predicted that computer power 
+        would double roughly every two years — a prophecy known as Moore’s Law.
+      </p>
+    </section>
+
+    <!-- ERA 6 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-right">The Personal Computer Era</h2>
+      <p>
+        The 1970s and 1980s made computing personal. 
+        Hobbyists built the <strong>Altair 8800</strong>, while 
+        <strong>Apple’s founders</strong> introduced the Apple I and II. 
+        IBM released its PC in 1981, sparking an explosion of home computing. 
+      </p>
+      <p>
+        This era created software giants, programming cultures, 
+        and the first generation of everyday programmers. 
+      </p>
+    </section>
+
+    <!-- ERA 7 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-left">The Internet and Open Source</h2>
+      <p>
+        The 1990s brought the World Wide Web. Suddenly, computers weren’t 
+        isolated — they were connected. <strong>Tim Berners-Lee</strong> 
+        introduced HTTP, HTML, and browsers. 
+      </p>
+      <p>
+        Open-source software, like <strong>Linux</strong>, changed how 
+        software was built and shared. Programming languages like 
+        <strong>Java</strong>, <strong>JavaScript</strong>, and <strong>PHP</strong> 
+        empowered a generation of web developers. 
+      </p>
+      <p>
+        The dot-com boom and bust taught the world that software was 
+        not just a tool but a global economy.
+      </p>
+    </section>
+
+    <!-- ERA 8 -->
+    <section class="history-era fade-in">
+      <h2 class="slide-right">The Age of AI and Global Computing</h2>
+      <p>
+        In the 2000s and beyond, computing became truly global. 
+        The rise of <strong>smartphones</strong>, <strong>cloud computing</strong>, 
+        and <strong>social media</strong> transformed daily life. 
+      </p>
+      <p>
+        Advances in <strong>machine learning</strong> and 
+        <strong>deep learning</strong> led to breakthroughs in AI, 
+        from self-driving cars to natural language processing. 
+      </p>
+      <p>
+        Today, research is exploring <strong>quantum computing</strong>, 
+        neuromorphic chips, and ethical AI, ensuring that the story of 
+        computer science is far from over.
+      </p>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© The University Of Uyo Department Of Computer Science</p>
+  </footer>
+
+  <!-- JS -->
+  <script src="computerscience.js"></script>
+</body>
+</html>
