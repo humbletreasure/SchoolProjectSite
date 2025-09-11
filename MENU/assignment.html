@@ -1,1 +1,355 @@
-dhrh
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Assignments Hub</title>
+  <style>
+    body { font-family: system-ui, Arial; margin:0; background:#f2f6fb; color:#111; }
+    header{background:#1f2937;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+    header a{color:#fff;text-decoration:none}
+    .container{max-width:1000px;margin:18px auto;padding:12px}
+    form{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:18px}
+    input, textarea, select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:14px}
+    .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:#0ea5a4;color:#012;text-decoration:none;border:none;cursor:pointer}
+    .feed .post{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);margin-bottom:12px}
+    .post-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .post-title{font-weight:700}
+    .post-course{font-size:13px;color:#555}
+    .post-desc{margin:10px 0;color:#222}
+    .post-media img, .post-media video{max-width:100%;border-radius:8px;margin-top:8px}
+    .stats{font-size:14px;color:#333; margin-right:8px}
+    .actions{display:flex;gap:8px;align-items:center}
+    .small-btn{padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
+    .like{background:#fee2e2;color:#b91c1c}
+    .comment{background:#e6f4ea;color:#065f46}
+    .share{background:#e0f2fe;color:#075985}
+    .opt{background:#f3f4f6;color:#111}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;right:0;top:30px;background:#fff;border:1px solid #eee;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:none;min-width:160px;z-index:50}
+    .dropdown-menu button{display:block;width:100%;padding:8px 10px;background:none;border:none;text-align:left;cursor:pointer}
+    .dropdown-menu button:hover{background:#f3f4f6}
+    .comments{margin-top:12px}
+    .comment-item{padding:8px;border-radius:8px;background:#f8fafc;margin-bottom:8px}
+    .inline{display:inline-block}
+  </style>
+</head>
+<body>
+  <header>
+    <div>📘 Assignments Hub</div>
+    <div><a href="index.html">🏠 Home</a></div>
+  </header>
+
+  <div class="container">
+    <form id="postForm">
+      <h3>Post Assignment</h3>
+      <input id="posterName" placeholder="Your name (max 20 chars)" maxlength="20" required />
+      <input id="title" placeholder="Title (max 100 chars)" maxlength="100" required />
+      <select id="course">
+        <option value="">-- Course (optional) --</option>
+        <option>GST 212</option><option>CSC 211</option><option>ENT 211</option>
+        <option>MTH 211</option><option>COS 211</option><option>SEN 211</option>
+        <option>CYB 211</option><option>UNIUYO-CSC 211</option>
+      </select>
+      <textarea id="description" rows="4" placeholder="Assignment details (max 1000 chars)" maxlength="1000" required></textarea>
+
+      <label>Attach files (max 10 files) — images ≤5MB, video ≤10MB</label>
+      <input id="files" type="file" multiple accept="image/*,video/*" />
+
+      <div style="margin-top:8px">
+        <button class="btn" type="submit">Post</button>
+      </div>
+      <div id="postMsg" style="margin-top:8px;color:#b91c1c"></div>
+    </form>
+
+    <section class="feed">
+      <h3>Recent assignments</h3>
+      <div id="feedList"></div>
+    </section>
+  </div>
+
+  <script>
+    // POINT TO YOUR BACKEND
+    const BACKEND = "https://backendcsc.onrender.com";
+
+    // unique client id
+    let clientUserId = localStorage.getItem("csc_userId");
+    if (!clientUserId) {
+      clientUserId = "u_" + Math.random().toString(36).slice(2, 12);
+      localStorage.setItem("csc_userId", clientUserId);
+    }
+
+    // tokens for delete
+    const postTokens = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
+
+    const postForm = document.getElementById("postForm");
+    const feedList = document.getElementById("feedList");
+    const filesInput = document.getElementById("files");
+    const postMsg = document.getElementById("postMsg");
+
+    function validateFiles(files) {
+      if (!files) return {ok:true};
+      if (files.length > 10) return {ok:false,msg:"Max 10 files allowed"};
+      for (const f of files) {
+        if (f.type.startsWith("video/") && f.size > 10 * 1024 * 1024) return {ok:false,msg: "Video "+f.name+" exceeds 10MB"};
+        if (f.type.startsWith("image/") && f.size > 5 * 1024 * 1024) return {ok:false,msg: "Image "+f.name+" exceeds 5MB"};
+      }
+      return {ok:true};
+    }
+
+    async function loadFeed() {
+      feedList.innerHTML = "Loading...";
+      try {
+        const res = await fetch(BACKEND + "/api/assignments");
+        const data = await res.json();
+        renderFeed(data);
+      } catch (e) {
+        feedList.innerHTML = "Failed to load feed";
+        console.error(e);
+      }
+    }
+
+    function renderFeed(items) {
+      feedList.innerHTML = "";
+      if (!items.length) {
+        feedList.innerHTML = "<div style='color:#666'>No assignments yet</div>";
+        return;
+      }
+
+      items.forEach(item => {
+        const post = document.createElement("div");
+        post.className = "post";
+        const created = new Date(item.createdAt).toLocaleString();
+        const filesHtml = (item.files || []).map(f => {
+          const url = BACKEND + "/api/files/" + encodeURIComponent(f.filename);
+          const ext = f.filename.split('.').pop().toLowerCase();
+          if (/^(mp4|webm|ogg|mov)$/.test(ext)) {
+            return `<video controls src="${url}" style="max-width:280px"></video>`;
+          } else {
+            return `<a href="${url}" target="_blank"><img src="${url}" style="max-width:120px;border-radius:6px"/></a>`;
+          }
+        }).join(" ");
+
+        post.innerHTML = `
+          <div class="post-meta">
+            <div>
+              <div style="font-weight:700">${escapeHtml(item.posterName || "Unknown")}</div>
+              <div class="post-title">${escapeHtml(item.title)}</div>
+              <div class="post-course">${escapeHtml(item.course || "")} • <small style="color:#666">${created}</small></div>
+            </div>
+            <div class="actions">
+              <div class="stats" id="stats-${item._id}">♥️ ${item.likes} · 💬 ${item.comments} · ↗️ ${item.shares}</div>
+              <div class="dropdown">
+                <button class="small-btn opt">⋮</button>
+                <div class="dropdown-menu" id="menu-${item._id}">
+                  <button onclick="downloadFiles('${item._id}')">⬇️ Download</button>
+                  <button onclick="copyLink('${item._id}')">🔗 Copy Link</button>
+                  <button onclick="tryDelete('${item._id}')">🗑 Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="post-desc">${escapeHtml(item.description)}</div>
+          <div class="post-media">${filesHtml}</div>
+
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <button class="small-btn like" onclick="likePost('${item._id}', this)">❤️ Like</button>
+            <button class="small-btn comment" onclick="openComments('${item._id}')">💬 Comment</button>
+            <button class="small-btn share" onclick="sharePost('${item._id}')">↗️ Share</button>
+            <div id="comment-area-${item._id}" style="flex:1"></div>
+          </div>
+
+          <div class="comments" id="comments-${item._id}"></div>
+        `;
+
+        post.querySelector(".dropdown .opt").addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const menu = document.getElementById("menu-" + item._id);
+          menu.style.display = menu.style.display === "block" ? "none" : "block";
+        });
+
+        document.addEventListener("click", () => {
+          const m = document.getElementById("menu-" + item._id);
+          if (m) m.style.display = "none";
+        });
+
+        feedList.appendChild(post);
+      });
+    }
+
+    postForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      postMsg.textContent = "";
+
+      const posterName = document.getElementById("posterName").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const course = document.getElementById("course").value;
+      const description = document.getElementById("description").value.trim();
+      const files = filesInput.files;
+
+      if (!posterName || !title || !description) {
+        postMsg.textContent = "Please fill required fields";
+        return;
+      }
+
+      const validated = validateFiles(files);
+      if (!validated.ok) { postMsg.textContent = validated.msg; return; }
+
+      const formData = new FormData();
+      formData.append("posterName", posterName);
+      formData.append("title", title);
+      formData.append("course", course);
+      formData.append("description", description);
+
+      for (const f of files) formData.append("files", f);
+
+      try {
+        const res = await fetch(BACKEND + "/api/assignments", { method: "POST", body: formData });
+        const json = await res.json();
+        if (!res.ok) { postMsg.textContent = json.error || "Failed to post"; return; }
+
+        const token = json.deleteToken;
+        if (token) {
+          const map = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
+          map[json.assignment._id] = token;
+          localStorage.setItem("csc_postTokens", JSON.stringify(map));
+        }
+
+        postForm.reset();
+        await loadFeed();
+      } catch (err) {
+        console.error(err);
+        postMsg.textContent = "Network error";
+      }
+    });
+
+    async function likePost(postId) {
+      try {
+        const res = await fetch(BACKEND + `/api/assignments/${postId}/like`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: clientUserId })
+        });
+        const json = await res.json();
+        if (!res.ok) return alert(json.error || "Unable to like");
+        await loadFeed();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function openComments(postId) {
+      const area = document.getElementById("comment-area-" + postId);
+      if (area.innerHTML) return;
+      area.innerHTML = `
+        <input id="cname-${postId}" placeholder="Your name (max 20)" maxlength="20"/>
+        <input id="ctext-${postId}" placeholder="Write a comment (max 10000 chars)"/>
+        <button class="btn" onclick="postComment('${postId}')">Post</button>
+      `;
+      loadComments(postId);
+    }
+
+    async function loadComments(postId) {
+      try {
+        const res = await fetch(BACKEND + `/api/assignments/${postId}`);
+        const json = await res.json();
+        const container = document.getElementById("comments-" + postId);
+        container.innerHTML = "";
+        if (json.comments && json.comments.length) {
+          json.comments.forEach(c => {
+            const div = document.createElement("div");
+            div.className = "comment-item";
+            div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${new Date(c.createdAt).toLocaleString()}</small>`;
+            container.appendChild(div);
+          });
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function postComment(postId) {
+      const name = document.getElementById("cname-" + postId).value.trim();
+      const text = document.getElementById("ctext-" + postId).value.trim();
+      if (!name || !text) return alert("Name and comment required");
+      try {
+        const res = await fetch(BACKEND + `/api/assignments/${postId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, text })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          return alert(err.error || "Failed to post comment");
+        }
+        await loadComments(postId);
+        await loadFeed();
+      } catch (e) { console.error(e); }
+    }
+
+    async function sharePost(postId) {
+      const url = window.location.origin + "/assignment.html?id=" + postId;
+      try {
+        await navigator.clipboard.writeText(url);
+        await fetch(BACKEND + `/api/assignments/${postId}/share`, { method: "POST" });
+        alert("Link copied: " + url);
+        await loadFeed();
+      } catch (e) {
+        console.error(e);
+        alert("Couldn't copy link");
+      }
+    }
+
+    async function copyLink(postId) {
+      const url = window.location.origin + "/assignment.html?id=" + postId;
+      await navigator.clipboard.writeText(url);
+      alert("Link copied: " + url);
+    }
+
+    async function downloadFiles(postId) {
+      try {
+        const res = await fetch(BACKEND + "/api/assignments");
+        const list = await res.json();
+        const item = list.find(x => x._id === postId);
+        if (!item || !item.files || !item.files.length) return alert("No files");
+        for (const f of item.files) {
+          const url = BACKEND + "/api/files/" + encodeURIComponent(f.filename);
+          window.open(url, "_blank");
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function tryDelete(postId) {
+      const tokens = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
+      const token = tokens[postId];
+      if (!token) return alert("Delete token not found.");
+      if (!confirm("Delete this post? This is permanent")) return;
+      try {
+        const res = await fetch(BACKEND + `/api/assignments/${postId}?token=${token}`, { method: "DELETE" });
+        const json = await res.json();
+        if (!res.ok) return alert(json.error || "Failed to delete");
+        delete tokens[postId];
+        localStorage.setItem("csc_postTokens", JSON.stringify(tokens));
+        await loadFeed();
+      } catch (e) { console.error(e); }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
+
+    init();
+    async function init() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      await loadFeed();
+      if (id) {
+        setTimeout(() => {
+          const el = document.querySelector(`[id^="stats-${id}"]`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 600);
+      }
+    }
+  </script>
+</body>
+</html>
