@@ -69,17 +69,17 @@
   </div>
 
   <script>
-    // POINT TO YOUR BACKEND
+    // Backend connection
     const BACKEND = "https://backendcsc.onrender.com";
 
-    // unique client id
+    // Unique client ID
     let clientUserId = localStorage.getItem("csc_userId");
     if (!clientUserId) {
       clientUserId = "u_" + Math.random().toString(36).slice(2, 12);
       localStorage.setItem("csc_userId", clientUserId);
     }
 
-    // tokens for delete
+    // Tokens for delete
     const postTokens = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
 
     const postForm = document.getElementById("postForm");
