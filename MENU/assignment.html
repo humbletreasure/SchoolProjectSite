@@ -68,24 +68,40 @@
     </section>
   </div>
 
-  <script>
-    // Backend connection
-    const BACKEND = "https://backendcsc.onrender.com";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-storage.js";
 
-    // Unique client ID
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfOuOzk9-XqcjBwU2mNvazOgr-lfcEYYk",
+      authDomain: "cscassignmentdb.firebaseapp.com",
+      projectId: "cscassignmentdb",
+      storageBucket: "cscassignmentdb.appspot.com",
+      messagingSenderId: "386977717971",
+      appId: "1:386977717971:web:74b4b47cb343711ce5fe26"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
     let clientUserId = localStorage.getItem("csc_userId");
     if (!clientUserId) {
       clientUserId = "u_" + Math.random().toString(36).slice(2, 12);
       localStorage.setItem("csc_userId", clientUserId);
     }
 
-    // Tokens for delete
-    const postTokens = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
-
     const postForm = document.getElementById("postForm");
     const feedList = document.getElementById("feedList");
     const filesInput = document.getElementById("files");
     const postMsg = document.getElementById("postMsg");
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
 
     function validateFiles(files) {
       if (!files) return {ok:true};
@@ -97,11 +113,23 @@
       return {ok:true};
     }
 
+    async function uploadFiles(files) {
+      const urls = [];
+      for (const file of files) {
+        const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        urls.push({name: file.name, url});
+      }
+      return urls;
+    }
+
     async function loadFeed() {
       feedList.innerHTML = "Loading...";
       try {
-        const res = await fetch(BACKEND + "/api/assignments");
-        const data = await res.json();
+        const snapshot = await getDocs(collection(db, "posts"));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a,b) => b.create_at?.toMillis() - a.create_at?.toMillis());
         renderFeed(data);
       } catch (e) {
         feedList.innerHTML = "Failed to load feed";
@@ -119,14 +147,13 @@
       items.forEach(item => {
         const post = document.createElement("div");
         post.className = "post";
-        const created = new Date(item.createdAt).toLocaleString();
+        const created = item.create_at ? item.create_at.toDate().toLocaleString() : "";
         const filesHtml = (item.files || []).map(f => {
-          const url = BACKEND + "/api/files/" + encodeURIComponent(f.filename);
-          const ext = f.filename.split('.').pop().toLowerCase();
+          const ext = f.name.split('.').pop().toLowerCase();
           if (/^(mp4|webm|ogg|mov)$/.test(ext)) {
-            return `<video controls src="${url}" style="max-width:280px"></video>`;
+            return `<video controls src="${f.url}" style="max-width:280px"></video>`;
           } else {
-            return `<a href="${url}" target="_blank"><img src="${url}" style="max-width:120px;border-radius:6px"/></a>`;
+            return `<a href="${f.url}" target="_blank"><img src="${f.url}" style="max-width:120px;border-radius:6px"/></a>`;
           }
         }).join(" ");
 
@@ -138,39 +165,35 @@
               <div class="post-course">${escapeHtml(item.course || "")} • <small style="color:#666">${created}</small></div>
             </div>
             <div class="actions">
-              <div class="stats" id="stats-${item._id}">♥️ ${item.likes} · 💬 ${item.comments} · ↗️ ${item.shares}</div>
+              <div class="stats" id="stats-${item.id}">❤️ ${item.likes?.length||0} · 💬 ${item.comments?.length||0} · ↗️ ${item.shares||0}</div>
               <div class="dropdown">
                 <button class="small-btn opt">⋮</button>
-                <div class="dropdown-menu" id="menu-${item._id}">
-                  <button onclick="downloadFiles('${item._id}')">⬇️ Download</button>
-                  <button onclick="copyLink('${item._id}')">🔗 Copy Link</button>
-                  <button onclick="tryDelete('${item._id}')">🗑 Delete</button>
+                <div class="dropdown-menu" id="menu-${item.id}">
+                  <button onclick="deletePost('${item.id}')">🗑 Delete</button>
                 </div>
               </div>
             </div>
           </div>
-
           <div class="post-desc">${escapeHtml(item.description)}</div>
           <div class="post-media">${filesHtml}</div>
-
           <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-            <button class="small-btn like" onclick="likePost('${item._id}', this)">❤️ Like</button>
-            <button class="small-btn comment" onclick="openComments('${item._id}')">💬 Comment</button>
-            <button class="small-btn share" onclick="sharePost('${item._id}')">↗️ Share</button>
-            <div id="comment-area-${item._id}" style="flex:1"></div>
+            <button class="small-btn like" onclick="likePost('${item.id}')">❤️ Like</button>
+            <button class="small-btn comment" onclick="openComments('${item.id}')">💬 Comment</button>
+            <button class="small-btn share" onclick="sharePost('${item.id}')">↗️ Share</button>
+            <div id="comment-area-${item.id}" style="flex:1"></div>
           </div>
-
-          <div class="comments" id="comments-${item._id}"></div>
+          <div class="comments" id="comments-${item.id}"></div>
         `;
 
+        // Toggle dropdown menu
         post.querySelector(".dropdown .opt").addEventListener("click", (ev) => {
           ev.stopPropagation();
-          const menu = document.getElementById("menu-" + item._id);
+          const menu = document.getElementById("menu-" + item.id);
           menu.style.display = menu.style.display === "block" ? "none" : "block";
         });
 
         document.addEventListener("click", () => {
-          const m = document.getElementById("menu-" + item._id);
+          const m = document.getElementById("menu-" + item.id);
           if (m) m.style.display = "none";
         });
 
@@ -196,146 +219,94 @@
       const validated = validateFiles(files);
       if (!validated.ok) { postMsg.textContent = validated.msg; return; }
 
-      const formData = new FormData();
-      formData.append("posterName", posterName);
-      formData.append("title", title);
-      formData.append("course", course);
-      formData.append("description", description);
-
-      for (const f of files) formData.append("files", f);
-
       try {
-        const res = await fetch(BACKEND + "/api/assignments", { method: "POST", body: formData });
-        const json = await res.json();
-        if (!res.ok) { postMsg.textContent = json.error || "Failed to post"; return; }
-
-        const token = json.deleteToken;
-        if (token) {
-          const map = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
-          map[json.assignment._id] = token;
-          localStorage.setItem("csc_postTokens", JSON.stringify(map));
-        }
-
+        const uploadedFiles = await uploadFiles(files);
+        await addDoc(collection(db, "posts"), {
+          posterName,
+          title,
+          course,
+          description,
+          files: uploadedFiles,
+          likes: [],
+          comments: [],
+          shares: 0,
+          create_at: serverTimestamp()
+        });
         postForm.reset();
         await loadFeed();
       } catch (err) {
         console.error(err);
-        postMsg.textContent = "Network error";
+        postMsg.textContent = "Failed to post assignment";
       }
     });
 
     async function likePost(postId) {
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDocs(postRef);
       try {
-        const res = await fetch(BACKEND + `/api/assignments/${postId}/like`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: clientUserId })
-        });
-        const json = await res.json();
-        if (!res.ok) return alert(json.error || "Unable to like");
+        const docSnap = await getDocs(postRef);
+        const postData = (await getDocs(postRef)).data();
+        const likes = postData.likes || [];
+        if (!likes.includes(clientUserId)) {
+          await updateDoc(postRef, { likes: arrayUnion(clientUserId) });
+        } else {
+          await updateDoc(postRef, { likes: arrayRemove(clientUserId) });
+        }
         await loadFeed();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     }
 
-    function openComments(postId) {
+    async function openComments(postId) {
       const area = document.getElementById("comment-area-" + postId);
       if (area.innerHTML) return;
       area.innerHTML = `
         <input id="cname-${postId}" placeholder="Your name (max 20)" maxlength="20"/>
-        <input id="ctext-${postId}" placeholder="Write a comment (max 10000 chars)"/>
+        <input id="ctext-${postId}" placeholder="Write a comment (max 1000 chars)" maxlength="1000"/>
         <button class="btn" onclick="postComment('${postId}')">Post</button>
       `;
       loadComments(postId);
     }
 
     async function loadComments(postId) {
-      try {
-        const res = await fetch(BACKEND + `/api/assignments/${postId}`);
-        const json = await res.json();
-        const container = document.getElementById("comments-" + postId);
-        container.innerHTML = "";
-        if (json.comments && json.comments.length) {
-          json.comments.forEach(c => {
-            const div = document.createElement("div");
-            div.className = "comment-item";
-            div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${new Date(c.createdAt).toLocaleString()}</small>`;
-            container.appendChild(div);
-          });
-        }
-      } catch (e) { console.error(e); }
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDocs(postRef);
+      const postData = postSnap.data();
+      const container = document.getElementById("comments-" + postId);
+      container.innerHTML = "";
+      (postData.comments || []).forEach(c => {
+        const div = document.createElement("div");
+        div.className = "comment-item";
+        div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${c.createdAt.toDate().toLocaleString()}</small>`;
+        container.appendChild(div);
+      });
     }
 
     async function postComment(postId) {
       const name = document.getElementById("cname-" + postId).value.trim();
       const text = document.getElementById("ctext-" + postId).value.trim();
       if (!name || !text) return alert("Name and comment required");
-      try {
-        const res = await fetch(BACKEND + `/api/assignments/${postId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, text })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          return alert(err.error || "Failed to post comment");
-        }
-        await loadComments(postId);
-        await loadFeed();
-      } catch (e) { console.error(e); }
+
+      const postRef = doc(db, "posts", postId);
+      await updateDoc(postRef, {
+        comments: arrayUnion({ name, text, createdAt: serverTimestamp() })
+      });
+      await loadComments(postId);
+      await loadFeed();
     }
 
     async function sharePost(postId) {
       const url = window.location.origin + "/assignment.html?id=" + postId;
-      try {
-        await navigator.clipboard.writeText(url);
-        await fetch(BACKEND + `/api/assignments/${postId}/share`, { method: "POST" });
-        alert("Link copied: " + url);
-        await loadFeed();
-      } catch (e) {
-        console.error(e);
-        alert("Couldn't copy link");
-      }
-    }
-
-    async function copyLink(postId) {
-      const url = window.location.origin + "/assignment.html?id=" + postId;
       await navigator.clipboard.writeText(url);
       alert("Link copied: " + url);
+      const postRef = doc(db, "posts", postId);
+      await updateDoc(postRef, { shares: (await getDocs(postRef)).data().shares + 1 });
+      await loadFeed();
     }
 
-    async function downloadFiles(postId) {
-      try {
-        const res = await fetch(BACKEND + "/api/assignments");
-        const list = await res.json();
-        const item = list.find(x => x._id === postId);
-        if (!item || !item.files || !item.files.length) return alert("No files");
-        for (const f of item.files) {
-          const url = BACKEND + "/api/files/" + encodeURIComponent(f.filename);
-          window.open(url, "_blank");
-        }
-      } catch (e) { console.error(e); }
-    }
-
-    async function tryDelete(postId) {
-      const tokens = JSON.parse(localStorage.getItem("csc_postTokens") || "{}");
-      const token = tokens[postId];
-      if (!token) return alert("Delete token not found.");
+    async function deletePost(postId) {
       if (!confirm("Delete this post? This is permanent")) return;
-      try {
-        const res = await fetch(BACKEND + `/api/assignments/${postId}?token=${token}`, { method: "DELETE" });
-        const json = await res.json();
-        if (!res.ok) return alert(json.error || "Failed to delete");
-        delete tokens[postId];
-        localStorage.setItem("csc_postTokens", JSON.stringify(tokens));
-        await loadFeed();
-      } catch (e) { console.error(e); }
-    }
-
-    function escapeHtml(str) {
-      if (!str) return "";
-      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+      await deleteDoc(doc(db, "posts", postId));
+      await loadFeed();
     }
 
     init();
