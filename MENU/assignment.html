@@ -3,73 +3,42 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Assignments Hub</title>
+<title>Assignments Hub - Test</title>
 <style>
-body { font-family: system-ui, Arial; margin:0; background:#f2f6fb; color:#111; }
+body { font-family: Arial, sans-serif; margin:0; background:#f2f6fb; color:#111; }
 header{background:#1f2937;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
 header a{color:#fff;text-decoration:none}
-.container{max-width:1000px;margin:18px auto;padding:12px}
+.container{max-width:600px;margin:20px auto;padding:12px}
 form{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:18px}
-input, textarea, select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:14px}
-.btn{display:inline-block;padding:8px 12px;border-radius:8px;background:#0ea5a4;color:#012;text-decoration:none;border:none;cursor:pointer}
-.feed .post{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);margin-bottom:12px}
-.post-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.post-title{font-weight:700}
-.post-course{font-size:13px;color:#555}
-.post-desc{margin:10px 0;color:#222}
-.post-media img, .post-media video{max-width:100%;border-radius:8px;margin-top:8px}
-.stats{font-size:14px;color:#333; margin-right:8px}
-.actions{display:flex;gap:8px;align-items:center}
-.small-btn{padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
-.like{background:#fee2e2;color:#b91c1c}
-.comment{background:#e6f4ea;color:#065f46}
-.share{background:#e0f2fe;color:#075985}
-.opt{background:#f3f4f6;color:#111}
-.dropdown{position:relative}
-.dropdown-menu{position:absolute;right:0;top:30px;background:#fff;border:1px solid #eee;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:none;min-width:160px;z-index:50}
-.dropdown-menu button{display:block;width:100%;padding:8px 10px;background:none;border:none;text-align:left;cursor:pointer}
-.dropdown-menu button:hover{background:#f3f4f6}
-.comments{margin-top:12px}
-.comment-item{padding:8px;border-radius:8px;background:#f8fafc;margin-bottom:8px}
-.inline{display:inline-block}
+input, textarea{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:14px}
+button{padding:8px 12px;border-radius:8px;border:none;background:#0ea5a4;color:#fff;cursor:pointer}
+.post{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);margin-bottom:12px}
+.post-meta{font-weight:700;color:#333}
+.post-desc{margin-top:8px;color:#222}
 </style>
 </head>
 <body>
+
 <header>
-<div>📘 Assignments Hub</div>
-<div><a href="index.html">🏠 Home</a></div>
+<div>📘 Assignments Hub - Test</div>
+<div><a href="#">🏠 Home</a></div>
 </header>
 
 <div class="container">
-  <form id="postForm">
-    <h3>Post Assignment</h3>
-    <input id="posterName" placeholder="Your name (max 20 chars)" maxlength="20" required/>
-    <input id="title" placeholder="Title (max 100 chars)" maxlength="100" required/>
-    <select id="course">
-      <option value="">-- Course (optional) --</option>
-      <option>GST 212</option><option>CSC 211</option><option>ENT 211</option>
-      <option>MTH 211</option><option>COS 211</option><option>SEN 211</option>
-      <option>CYB 211</option><option>UNIUYO-CSC 211</option>
-    </select>
-    <textarea id="description" rows="4" placeholder="Assignment details (max 1000 chars)" maxlength="1000" required></textarea>
-    <label>Attach files (max 10 files) — images ≤5MB, video ≤10MB</label>
-    <input id="files" type="file" multiple accept="image/*,video/*"/>
-    <div style="margin-top:8px">
-      <button class="btn" type="submit">Post</button>
-    </div>
-    <div id="postMsg" style="margin-top:8px;color:#b91c1c"></div>
-  </form>
+<form id="postForm">
+  <input id="posterName" placeholder="Your name" required/>
+  <input id="title" placeholder="Title" required/>
+  <textarea id="description" rows="4" placeholder="Assignment details" required></textarea>
+  <button type="submit">Post</button>
+  <div id="postMsg" style="color:red;margin-top:8px"></div>
+</form>
 
-  <section class="feed">
-    <h3>Recent assignments</h3>
-    <div id="feedList"></div>
-  </section>
+<div id="feedList"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-storage.js";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAfOuOzk9-XqcjBwU2mNvazOgr-lfcEYYk",
@@ -82,177 +51,49 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
-
-let clientUserId = localStorage.getItem("csc_userId");
-if (!clientUserId) {
-  clientUserId = "u_" + Math.random().toString(36).slice(2, 12);
-  localStorage.setItem("csc_userId", clientUserId);
-}
 
 const postForm = document.getElementById("postForm");
 const feedList = document.getElementById("feedList");
-const filesInput = document.getElementById("files");
 const postMsg = document.getElementById("postMsg");
 
-function escapeHtml(str){if(!str)return"";return String(str).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function escapeHtml(str){return String(str||"").replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
 
-function validateFiles(files){
-  if(!files)return {ok:true};
-  if(files.length>10)return {ok:false,msg:"Max 10 files allowed"};
-  for(const f of files){
-    if(f.type.startsWith("video/") && f.size>10*1024*1024)return {ok:false,msg:"Video "+f.name+" exceeds 10MB"};
-    if(f.type.startsWith("image/") && f.size>5*1024*1024)return {ok:false,msg:"Image "+f.name+" exceeds 5MB"};
-  }
-  return {ok:true};
-}
-
-async function uploadFiles(files){
-  const urls=[];
-  for(const file of files){
-    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    urls.push({name:file.name,url});
-  }
-  return urls;
-}
-
-function renderFeed(items){
-  feedList.innerHTML="";
-  if(!items.length){feedList.innerHTML="<div style='color:#666'>No assignments yet</div>"; return;}
-  items.forEach(item=>{
-    const post=document.createElement("div");
-    post.className="post";
-    const created=item.create_at?new Date(item.create_at.seconds*1000).toLocaleString():"";
-    const filesHtml=(item.files||[]).map(f=>{
-      const ext=f.name.split('.').pop().toLowerCase();
-      if(/^(mp4|webm|ogg|mov)$/.test(ext))return `<video controls src="${f.url}" style="max-width:280px"></video>`;
-      return `<a href="${f.url}" target="_blank"><img src="${f.url}" style="max-width:120px;border-radius:6px"/></a>`;
-    }).join(" ");
-
-    post.innerHTML=`
-      <div class="post-meta">
-        <div>
-          <div style="font-weight:700">${escapeHtml(item.posterName||"Unknown")}</div>
-          <div class="post-title">${escapeHtml(item.title)}</div>
-          <div class="post-course">${escapeHtml(item.course||"")} • <small style="color:#666">${created}</small></div>
-        </div>
-        <div class="actions">
-          <div class="stats" id="stats-${item.id}">❤️ ${item.likes?.length||0} · 💬 ${item.comments?.length||0} · ↗️ ${item.shares||0}</div>
-          <div class="dropdown">
-            <button class="small-btn opt">⋮</button>
-            <div class="dropdown-menu" id="menu-${item.id}">
-              <button onclick="deletePost('${item.id}')">🗑 Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="post-desc">${escapeHtml(item.description)}</div>
-      <div class="post-media">${filesHtml}</div>
-      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-        <button class="small-btn like" onclick="likePost('${item.id}')">❤️ Like</button>
-        <button class="small-btn comment" onclick="openComments('${item.id}')">💬 Comment</button>
-        <button class="small-btn share" onclick="sharePost('${item.id}')">↗️ Share</button>
-        <div id="comment-area-${item.id}" style="flex:1"></div>
-      </div>
-      <div class="comments" id="comments-${item.id}"></div>
-    `;
-    feedList.appendChild(post);
-  });
-}
-
-// Real-time listener
-import { query, orderBy, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
-const postsQuery = query(collection(db,"posts"),orderBy("create_at","desc"));
-onSnapshot(postsQuery, snapshot => {
-  const data = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-  renderFeed(data);
-});
-
-// Post submission
-postForm.addEventListener("submit", async (e)=>{
+postForm.addEventListener("submit", async e => {
   e.preventDefault();
   postMsg.textContent="";
   const posterName = document.getElementById("posterName").value.trim();
   const title = document.getElementById("title").value.trim();
-  const course = document.getElementById("course").value;
   const description = document.getElementById("description").value.trim();
-  const files = filesInput.files;
-  if(!posterName||!title||!description){postMsg.textContent="Please fill required fields";return;}
-  const validated = validateFiles(files);
-  if(!validated.ok){postMsg.textContent=validated.msg;return;}
+  if(!posterName||!title||!description){postMsg.textContent="Please fill all fields"; return;}
   try{
-    const uploadedFiles = await uploadFiles(files);
-    await addDoc(collection(db,"posts"),{
-      posterName,title,course,description,
-      files:uploadedFiles, likes:[], comments:[], shares:0,
+    await addDoc(collection(db,"posts"), {
+      posterName,
+      title,
+      description,
       create_at: serverTimestamp()
     });
     postForm.reset();
-  }catch(err){console.error(err); postMsg.textContent="Failed to post assignment";}
+  } catch(err) {
+    console.error(err);
+    postMsg.textContent="Failed to post";
+  }
 });
 
-// Interactive functions
-async function likePost(postId){
-  const postRef = doc(db,"posts",postId);
-  const postSnap = await getDoc(postRef);
-  if(!postSnap.exists()) return;
-  const likes = postSnap.data().likes||[];
-  if(!likes.includes(clientUserId)) await updateDoc(postRef,{likes:arrayUnion(clientUserId)});
-  else await updateDoc(postRef,{likes:arrayRemove(clientUserId)});
-}
-
-async function openComments(postId){
-  const area = document.getElementById(`comment-area-${postId}`);
-  if(area.innerHTML) return;
-  area.innerHTML=`
-    <input id="cname-${postId}" placeholder="Your name (max 20)" maxlength="20"/>
-    <input id="ctext-${postId}" placeholder="Write a comment (max 1000 chars)" maxlength="1000"/>
-    <button class="btn" onclick="postComment('${postId}')">Post</button>
-  `;
-  loadComments(postId);
-}
-
-async function loadComments(postId){
-  const postRef = doc(db,"posts",postId);
-  const postSnap = await getDoc(postRef);
-  if(!postSnap.exists()) return;
-  const postData = postSnap.data();
-  const container = document.getElementById(`comments-${postId}`);
-  container.innerHTML="";
-  (postData.comments||[]).forEach(c=>{
+// Real-time feed
+onSnapshot(collection(db,"posts"), snapshot=>{
+  const posts = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+  // sort by timestamp descending
+  posts.sort((a,b)=>(b.create_at?.seconds||0)-(a.create_at?.seconds||0));
+  feedList.innerHTML = "";
+  posts.forEach(post=>{
     const div = document.createElement("div");
-    div.className="comment-item";
-    const created = c.createdAt ? new Date(c.createdAt.seconds*1000).toLocaleString() : "";
-    div.innerHTML=`<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${created}</small>`;
-    container.appendChild(div);
+    div.className="post";
+    const time = post.create_at ? new Date(post.create_at.seconds*1000).toLocaleString() : "";
+    div.innerHTML = `<div class="post-meta">${escapeHtml(post.posterName)} — ${escapeHtml(post.title)} • <small>${time}</small></div>
+                     <div class="post-desc">${escapeHtml(post.description)}</div>`;
+    feedList.appendChild(div);
   });
-}
-
-async function postComment(postId){
-  const name = document.getElementById(`cname-${postId}`).value.trim();
-  const text = document.getElementById(`ctext-${postId}`).value.trim();
-  if(!name||!text) return alert("Name and comment required");
-  const postRef = doc(db,"posts",postId);
-  await updateDoc(postRef,{comments:arrayUnion({name,text,createdAt:serverTimestamp()})});
-}
-
-async function sharePost(postId){
-  const postRef = doc(db,"posts",postId);
-  const postSnap = await getDoc(postRef);
-  if(!postSnap.exists()) return;
-  const shares = postSnap.data().shares||0;
-  await updateDoc(postRef,{shares:shares+1});
-  const url = window.location.origin + "/assignment.html?id="+postId;
-  await navigator.clipboard.writeText(url);
-  alert("Link copied: "+url);
-}
-
-async function deletePost(postId){
-  if(!confirm("Delete this post? This is permanent")) return;
-  await deleteDoc(doc(db,"posts",postId));
-}
+});
 </script>
 </body>
 </html>
