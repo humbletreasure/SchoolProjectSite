@@ -70,10 +70,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-storage.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAfOuOzk9-XqcjBwU2mNvazOgr-lfcEYYk",
       authDomain: "cscassignmentdb.firebaseapp.com",
@@ -128,8 +127,9 @@
       feedList.innerHTML = "Loading...";
       try {
         const snapshot = await getDocs(collection(db, "posts"));
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-          .sort((a,b) => b.create_at?.toMillis() - a.create_at?.toMillis());
+        const data = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a,b) => (b.create_at?.seconds || 0) - (a.create_at?.seconds || 0));
         renderFeed(data);
       } catch (e) {
         feedList.innerHTML = "Failed to load feed";
@@ -139,22 +139,16 @@
 
     function renderFeed(items) {
       feedList.innerHTML = "";
-      if (!items.length) {
-        feedList.innerHTML = "<div style='color:#666'>No assignments yet</div>";
-        return;
-      }
+      if (!items.length) { feedList.innerHTML = "<div style='color:#666'>No assignments yet</div>"; return; }
 
       items.forEach(item => {
         const post = document.createElement("div");
         post.className = "post";
-        const created = item.create_at ? item.create_at.toDate().toLocaleString() : "";
+        const created = item.create_at ? new Date(item.create_at.seconds*1000).toLocaleString() : "";
         const filesHtml = (item.files || []).map(f => {
           const ext = f.name.split('.').pop().toLowerCase();
-          if (/^(mp4|webm|ogg|mov)$/.test(ext)) {
-            return `<video controls src="${f.url}" style="max-width:280px"></video>`;
-          } else {
-            return `<a href="${f.url}" target="_blank"><img src="${f.url}" style="max-width:120px;border-radius:6px"/></a>`;
-          }
+          if (/^(mp4|webm|ogg|mov)$/.test(ext)) return `<video controls src="${f.url}" style="max-width:280px"></video>`;
+          return `<a href="${f.url}" target="_blank"><img src="${f.url}" style="max-width:120px;border-radius:6px"/></a>`;
         }).join(" ");
 
         post.innerHTML = `
@@ -185,111 +179,96 @@
           <div class="comments" id="comments-${item.id}"></div>
         `;
 
-        // Toggle dropdown menu
-        post.querySelector(".dropdown .opt").addEventListener("click", (ev) => {
+        post.querySelector(".dropdown .opt").addEventListener("click", ev => {
           ev.stopPropagation();
           const menu = document.getElementById("menu-" + item.id);
           menu.style.display = menu.style.display === "block" ? "none" : "block";
         });
-
-        document.addEventListener("click", () => {
-          const m = document.getElementById("menu-" + item.id);
-          if (m) m.style.display = "none";
-        });
+        document.addEventListener("click", () => { const m = document.getElementById("menu-" + item.id); if(m)m.style.display="none"; });
 
         feedList.appendChild(post);
       });
     }
 
-    postForm.addEventListener("submit", async (e) => {
+    postForm.addEventListener("submit", async e => {
       e.preventDefault();
-      postMsg.textContent = "";
-
-      const posterName = document.getElementById("posterName").value.trim();
-      const title = document.getElementById("title").value.trim();
-      const course = document.getElementById("course").value;
-      const description = document.getElementById("description").value.trim();
-      const files = filesInput.files;
-
-      if (!posterName || !title || !description) {
-        postMsg.textContent = "Please fill required fields";
-        return;
-      }
-
-      const validated = validateFiles(files);
-      if (!validated.ok) { postMsg.textContent = validated.msg; return; }
-
-      try {
-        const uploadedFiles = await uploadFiles(files);
-        await addDoc(collection(db, "posts"), {
-          posterName,
-          title,
-          course,
-          description,
-          files: uploadedFiles,
-          likes: [],
-          comments: [],
-          shares: 0,
+      postMsg.textContent="";
+      const posterName=document.getElementById("posterName").value.trim();
+      const title=document.getElementById("title").value.trim();
+      const course=document.getElementById("course").value;
+      const description=document.getElementById("description").value.trim();
+      const files=filesInput.files;
+      if(!posterName || !title || !description){postMsg.textContent="Please fill required fields"; return;}
+      const validated=validateFiles(files);
+      if(!validated.ok){postMsg.textContent=validated.msg; return;}
+      try{
+        const uploadedFiles=await uploadFiles(files);
+        await addDoc(collection(db,"posts"),{
+          posterName, title, course, description,
+          files:uploadedFiles, likes:[], comments:[], shares:0,
           create_at: serverTimestamp()
         });
         postForm.reset();
         await loadFeed();
-      } catch (err) {
-        console.error(err);
-        postMsg.textContent = "Failed to post assignment";
-      }
+      }catch(err){console.error(err); postMsg.textContent="Failed to post assignment";}
     });
 
     async function likePost(postId) {
       const postRef = doc(db, "posts", postId);
-      const postSnap = await getDocs(postRef);
-      try {
-        const docSnap = await getDocs(postRef);
-        const postData = (await getDocs(postRef)).data();
-        const likes = postData.likes || [];
-        if (!likes.includes(clientUserId)) {
-          await updateDoc(postRef, { likes: arrayUnion(clientUserId) });
-        } else {
-          await updateDoc(postRef, { likes: arrayRemove(clientUserId) });
-        }
-        await loadFeed();
-      } catch (e) { console.error(e); }
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+      const postData = postSnap.data();
+      const likes = postData.likes || [];
+
+      if (!likes.includes(clientUserId)) {
+        await updateDoc(postRef, { likes: arrayUnion(clientUserId) });
+      } else {
+        await updateDoc(postRef, { likes: arrayRemove(clientUserId) });
+      }
+
+      await loadFeed();
     }
 
     async function openComments(postId) {
       const area = document.getElementById("comment-area-" + postId);
       if (area.innerHTML) return;
+
       area.innerHTML = `
         <input id="cname-${postId}" placeholder="Your name (max 20)" maxlength="20"/>
         <input id="ctext-${postId}" placeholder="Write a comment (max 1000 chars)" maxlength="1000"/>
         <button class="btn" onclick="postComment('${postId}')">Post</button>
       `;
-      loadComments(postId);
+
+      await loadComments(postId);
     }
 
     async function loadComments(postId) {
       const postRef = doc(db, "posts", postId);
-      const postSnap = await getDocs(postRef);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
       const postData = postSnap.data();
       const container = document.getElementById("comments-" + postId);
       container.innerHTML = "";
+
       (postData.comments || []).forEach(c => {
         const div = document.createElement("div");
         div.className = "comment-item";
-        div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${c.createdAt.toDate().toLocaleString()}</small>`;
+        const created = c.createdAt ? new Date(c.createdAt.seconds*1000).toLocaleString() : "";
+        div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><small style="color:#666">${created}</small>`;
         container.appendChild(div);
       });
     }
 
     async function postComment(postId) {
-      const name = document.getElementById("cname-" + postId).value.trim();
-      const text = document.getElementById("ctext-" + postId).value.trim();
+      const name = document.getElementById(`cname-${postId}`).value.trim();
+      const text = document.getElementById(`ctext-${postId}`).value.trim();
       if (!name || !text) return alert("Name and comment required");
 
       const postRef = doc(db, "posts", postId);
       await updateDoc(postRef, {
         comments: arrayUnion({ name, text, createdAt: serverTimestamp() })
       });
+
       await loadComments(postId);
       await loadFeed();
     }
@@ -298,8 +277,13 @@
       const url = window.location.origin + "/assignment.html?id=" + postId;
       await navigator.clipboard.writeText(url);
       alert("Link copied: " + url);
+
       const postRef = doc(db, "posts", postId);
-      await updateDoc(postRef, { shares: (await getDocs(postRef)).data().shares + 1 });
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+      const shares = postSnap.data().shares || 0;
+      await updateDoc(postRef, { shares: shares + 1 });
+
       await loadFeed();
     }
 
@@ -309,6 +293,7 @@
       await loadFeed();
     }
 
+    // Initialize
     init();
     async function init() {
       const params = new URLSearchParams(location.search);
